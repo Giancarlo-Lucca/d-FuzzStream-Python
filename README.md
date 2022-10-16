@@ -26,12 +26,12 @@ To run examples and generate graphics:
 Create DFuzzStreamSummarizer instance with the following options:
 * *min_fmics* (default: 5) -> minimum number of elements in the summary structure.
 * *max_fmics* (default: 100) -> maximum number of elements in the summary structure.
-* *merge_threshold (default: 1)* -> threshold to dictate whether two summary structures can be merged.
+* *merge_threshold* (default: 1) -> threshold to dictate whether two summary structures can be merged.
   * value as 1 mean two structures with any overlap can be merged.
   * higher values mean structures with no overlap, but closer to each other, can be merged.
   * lower values mean structures need to overlap more to be merged.
 * *radius_factor* (default: 1) -> multiplication factor for summary structures dispersion (radius).
-* m (default: 2) -> Fuzziness factor (must be different than 1).
+* *m* (default: 2) -> Fuzziness factor (must be different than 1).
 
 All options have default values.
 
