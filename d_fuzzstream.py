@@ -45,7 +45,7 @@ class DFuzzStreamSummarizer:
             self.__fmics.append(FMiC(values, timestamp))
         else:
             self.VARmemberships = self.__memberships(distance_from_fmics)
-            #print("memberships = ", self.ALLmemberships)
+            #print("memberships = ", self.VARmemberships)
             for idx, fmic in enumerate(self.__fmics):
                 fmic.assign(values, self.VARmemberships[idx], distance_from_fmics[idx])
 
@@ -54,10 +54,10 @@ class DFuzzStreamSummarizer:
     def summary(self) :
         return self.__fmics.copy()
 
-    def __merge(self, ALLmemberships):
+    def __merge(self, memberships):
         fmics_to_merge = []
-        #print("memberships = ", ALLmemberships)
-        #print("memberships size out =", len(ALLmemberships))
+        #print("memberships = ", memberships)
+        #print("memberships size out =", len(memberships))
         #print("------------------------------------------------")
         #If measure is FMic related
         if(self.idxSimilarity == 1):
@@ -75,18 +75,18 @@ class DFuzzStreamSummarizer:
                         fmics_to_merge.append([i, j, similarity])
 
         else:
-            for i in range(0, len(ALLmemberships) - 1):
-                for j in range(i + 1, len(ALLmemberships)):
+            for i in range(0, len(memberships) - 1):
+                for j in range(i + 1, len(memberships)):
                     #S2 sim. measure
                     if(self.idxSimilarity == 2):
-                        self.similMatrix[i, j, 0] += np.minimum(ALLmemberships[i], ALLmemberships[j])
-                        self.similMatrix[i, j, 1] += np.maximum(ALLmemberships[i], ALLmemberships[j])
+                        self.similMatrix[i, j, 0] += np.minimum(memberships[i], memberships[j])
+                        self.similMatrix[i, j, 1] += np.maximum(memberships[i], memberships[j])
                         similarity = self.similMatrix[i, j, 0] / self.similMatrix[i, j, 1]
                     
                     #S(A,B) = AM(REF(x_1,y_1), ... REF(x_n, y_n))
                     if(self.idxSimilarity == 3):
                         t = 10
-                        self.similMatrix[i, j, 0] += np.power(1 - np.absolute(ALLmemberships[i] - ALLmemberships[j]), 1/t)
+                        self.similMatrix[i, j, 0] += np.power(1 - np.absolute(memberships[i] - memberships[j]), 1/t)
                         self.similMatrix[i, j, 1] += 1
                         similarity = self.similMatrix[i, j, 0] / self.similMatrix[i, j, 1]
                     
