@@ -57,32 +57,43 @@ class DFuzzStreamSummarizer:
     def __merge(self, ALLmemberships):
         fmics_to_merge = []
         #print("memberships = ", ALLmemberships)
-        #print("memberships size out =", len(self.ALLmemberships))
-        for i in range(0, len(ALLmemberships) - 1):
-            for j in range(i + 1, len(ALLmemberships)):
-                #standard measure S1
-                print("i = ", i)
-                print("j = ", j)
-                print("------------------")
-                if(self.idxSimilarity == 1):
+        #print("memberships size out =", len(ALLmemberships))
+        #print("------------------------------------------------")
+        #If measure is FMic related
+        if(self.idxSimilarity == 1):
+            for i in range(0, len(self.__fmics) - 1):           
+                for j in range(i + 1, len(self.__fmics)):
                     dissimilarity = self.__euclidean_distance(self.__fmics[i].center, self.__fmics[j].center)
                     sum_of_radius = self.__fmics[i].radius + self.__fmics[j].radius
-                    #self.similMatrix[i, j, 0] += np.minimum(ALLmemberships[i], ALLmemberships[j])
-                    #self.similMatrix[i, j, 1] += np.maximum(ALLmemberships[i], ALLmemberships[j])
-
                     if dissimilarity != 0:
-                        similarity = sum_of_radius / dissimilarity
+                       similarity = sum_of_radius / dissimilarity
                     else:
                         # Highest value possible
-                        similarity = 1.7976931348623157e+308
-                    #print("similarity = ", similarity)
-                elif(self.idxSimilarity == 2):
-                    self.similMatrix[i, j, 0] += np.minimum(ALLmemberships[i], ALLmemberships[j])
-                    self.similMatrix[i, j, 1] += np.maximum(ALLmemberships[i], ALLmemberships[j])
-                    similarity = self.similMatrix[i, j, 0] / self.similMatrix[i, j, 1]
+                       similarity = 1.7976931348623157e+308
+
+                    if similarity >= self.merge_threshold:
+                        fmics_to_merge.append([i, j, similarity])
+
+        else:
+            for i in range(0, len(ALLmemberships) - 1):
+                for j in range(i + 1, len(ALLmemberships)):
+                    #S2 sim. measure
+                    if(self.idxSimilarity == 2):
+                        self.similMatrix[i, j, 0] += np.minimum(ALLmemberships[i], ALLmemberships[j])
+                        self.similMatrix[i, j, 1] += np.maximum(ALLmemberships[i], ALLmemberships[j])
+                        similarity = self.similMatrix[i, j, 0] / self.similMatrix[i, j, 1]
                     
-                if similarity >= self.merge_threshold:
-                    fmics_to_merge.append([i, j, similarity])
+                    #S(A,B) = AM(REF(x_1,y_1), ... REF(x_n, y_n))
+                    if(self.idxSimilarity == 3):
+                        t = 10
+                        self.similMatrix[i, j, 0] += np.power(1 - np.absolute(ALLmemberships[i] - ALLmemberships[j]), 1/t)
+                        self.similMatrix[i, j, 1] += 1
+                        similarity = self.similMatrix[i, j, 0] / self.similMatrix[i, j, 1]
+                    
+                    
+                    
+                    if similarity >= self.merge_threshold:
+                        fmics_to_merge.append([i, j, similarity])
 
         # Sort by most similar
         fmics_to_merge.sort(reverse=True, key=lambda k: k[2])
