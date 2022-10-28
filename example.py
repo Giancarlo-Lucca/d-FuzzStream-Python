@@ -1,8 +1,8 @@
 import pandas as pd
 from d_fuzzstream import DFuzzStreamSummarizer
 
-
-summarizer = DFuzzStreamSummarizer()
+idxSimilarity = 2
+summarizer = DFuzzStreamSummarizer(idxSimilarity)
 
 summary = {'x': [], 'y': [], 'weight': []}
 timestamp = 0

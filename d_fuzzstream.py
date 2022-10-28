@@ -1,16 +1,19 @@
 from fmic import FMiC
 from math import sqrt
-
+import numpy as np
 
 class DFuzzStreamSummarizer:
 
-    def __init__(self, min_fmics=5, max_fmics=100, merge_threshold=1.0, radius_factor=1.0, m=2.0):
+    def __init__(self, idxSimilarity, min_fmics=5, max_fmics=100, merge_threshold=1.0, radius_factor=1.0, m=2.0):
         self.min_fmics = min_fmics
         self.max_fmics = max_fmics
         self.merge_threshold = merge_threshold
         self.radius_factor = radius_factor
         self.m = m
         self.__fmics = []
+        self.VARmemberships = []
+        self.idxSimilarity = idxSimilarity
+        self.similMatrix = np.zeros((max_fmics, max_fmics, 2))
 
     def summarize(self, values, timestamp):
         if len(self.__fmics) < self.min_fmics:
@@ -41,29 +44,43 @@ class DFuzzStreamSummarizer:
                 self.__fmics.remove(oldest)
             self.__fmics.append(FMiC(values, timestamp))
         else:
-            memberships = self.__memberships(distance_from_fmics)
+            self.VARmemberships = self.__memberships(distance_from_fmics)
+            #print("memberships = ", self.ALLmemberships)
             for idx, fmic in enumerate(self.__fmics):
-                fmic.assign(values, memberships[idx], distance_from_fmics[idx])
+                fmic.assign(values, self.VARmemberships[idx], distance_from_fmics[idx])
 
-        self.__fmics = self.__merge()
+        self.__fmics = self.__merge(self.VARmemberships)
 
-    def summary(self):
+    def summary(self) :
         return self.__fmics.copy()
 
-    def __merge(self):
+    def __merge(self, ALLmemberships):
         fmics_to_merge = []
+        #print("memberships = ", ALLmemberships)
+        #print("memberships size out =", len(self.ALLmemberships))
+        for i in range(0, len(ALLmemberships) - 1):
+            for j in range(i + 1, len(ALLmemberships)):
+                #standard measure S1
+                print("i = ", i)
+                print("j = ", j)
+                print("------------------")
+                if(self.idxSimilarity == 1):
+                    dissimilarity = self.__euclidean_distance(self.__fmics[i].center, self.__fmics[j].center)
+                    sum_of_radius = self.__fmics[i].radius + self.__fmics[j].radius
+                    #self.similMatrix[i, j, 0] += np.minimum(ALLmemberships[i], ALLmemberships[j])
+                    #self.similMatrix[i, j, 1] += np.maximum(ALLmemberships[i], ALLmemberships[j])
 
-        for i in range(0, len(self.__fmics) - 1):
-            for j in range(i + 1, len(self.__fmics)):
-                dissimilarity = self.__euclidean_distance(self.__fmics[i].center, self.__fmics[j].center)
-                sum_of_radius = self.__fmics[i].radius + self.__fmics[j].radius
-
-                if dissimilarity != 0:
-                    similarity = sum_of_radius / dissimilarity
-                else:
-                    # Highest value possible
-                    similarity = 1.7976931348623157e+308
-
+                    if dissimilarity != 0:
+                        similarity = sum_of_radius / dissimilarity
+                    else:
+                        # Highest value possible
+                        similarity = 1.7976931348623157e+308
+                    #print("similarity = ", similarity)
+                elif(self.idxSimilarity == 2):
+                    self.similMatrix[i, j, 0] += np.minimum(ALLmemberships[i], ALLmemberships[j])
+                    self.similMatrix[i, j, 1] += np.maximum(ALLmemberships[i], ALLmemberships[j])
+                    similarity = self.similMatrix[i, j, 0] / self.similMatrix[i, j, 1]
+                    
                 if similarity >= self.merge_threshold:
                     fmics_to_merge.append([i, j, similarity])
 
