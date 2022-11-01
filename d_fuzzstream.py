@@ -4,7 +4,7 @@ import numpy as np
 
 class DFuzzStreamSummarizer:
 
-    def __init__(self, idxSimilarity, min_fmics=5, max_fmics=100, merge_threshold=1.0, radius_factor=1.0, m=2.0):
+    def __init__(self, idxSimilarity, min_fmics=5, max_fmics=100, merge_threshold=0.99999999999999, radius_factor=1.0, m=2.0):
         self.min_fmics = min_fmics
         self.max_fmics = max_fmics
         self.merge_threshold = merge_threshold
@@ -14,6 +14,7 @@ class DFuzzStreamSummarizer:
         self.VARmemberships = []
         self.idxSimilarity = idxSimilarity
         self.similMatrix = np.zeros((max_fmics, max_fmics, 2))
+        self.maxVal = 0
 
     def summarize(self, values, timestamp):
         if len(self.__fmics) < self.min_fmics:
@@ -56,6 +57,7 @@ class DFuzzStreamSummarizer:
 
     def __merge(self, memberships):
         fmics_to_merge = []
+        similarity = 0
         #print("memberships = ", memberships)
         #print("memberships size out =", len(memberships))
         #print("------------------------------------------------")
@@ -84,17 +86,50 @@ class DFuzzStreamSummarizer:
                         similarity = self.similMatrix[i, j, 0] / self.similMatrix[i, j, 1]
                     
                     #S(A,B) = AM(REF(x_1,y_1), ... REF(x_n, y_n))
-                    if(self.idxSimilarity == 3):
+                    elif(self.idxSimilarity == 3):
                         t = 10
                         self.similMatrix[i, j, 0] += np.power(1 - np.absolute(memberships[i] - memberships[j]), 1/t)
                         self.similMatrix[i, j, 1] += 1
                         similarity = self.similMatrix[i, j, 0] / self.similMatrix[i, j, 1]
-                    
-                    
-                    
-                    if similarity >= self.merge_threshold:
-                        fmics_to_merge.append([i, j, similarity])
+                        #print(similarity)
 
+                    #S(A,B) = G(O(x_1,y_1), ... O(x_n, y_n))
+                    # O = product   #G = probabilistic sum -> x1 + x2 − x1 · x2
+                    elif(self.idxSimilarity == 4):
+                        overlap = memberships[i] * memberships[j]                      
+                        self.similMatrix[i, j, 0] += self.similMatrix[i, j, 0] + overlap - self.similMatrix[i, j, 0] * overlap 
+                        similarity = self.similMatrix[i, j, 0]
+                        print(similarity)
+
+                    #S(A,B) = G(O(x_1,y_1), ... O(x_n, y_n))
+                    #O = min #G = max
+                    elif(self.idxSimilarity == 5):                     
+                        min = np.minimum(memberships[i], memberships[j])
+                        self.similMatrix[i, j, 0] += np.maximum(self.similMatrix[i, j, 0], min)
+                        similarity = self.similMatrix[i, j, 0]
+
+                        
+                    #S(A,B) = G(O(x_1,y_1), ... O(x_n, y_n))
+                    #O = GM        #G = 
+                    elif(self.idxSimilarity == 6):
+                        GM = np.sqrt(memberships[i] * memberships[j])
+                        #self.similMatrix[i, j, 0] += 1 - ()
+                        #self.similMatrix[i, j, 1] += 1
+                    #S(A,B) = G(O(x_1,y_1), ... O(x_n, y_n))
+                    #O = OB        #G = 
+                    elif(self.idxSimilarity == 7):
+                        OB = np.sqrt((memberships[i] * memberships[j]) * np.minimum( memberships[i], memberships[j]))
+                        #self.similMatrix[i, j, 0] +=
+
+                    #S(A,B) = G(O(x_1,y_1), ... O(x_n, y_n))
+                    #O = Div       #G = 
+                    elif(self.idxSimilarity == 8):
+                        ODiv = np.sqrt(memberships[i] * memberships[j])                        
+
+
+                    if similarity >= self.merge_threshold:
+                       fmics_to_merge.append([i, j, similarity])
+                        
         # Sort by most similar
         fmics_to_merge.sort(reverse=True, key=lambda k: k[2])
         merged_fmics_idx = []
