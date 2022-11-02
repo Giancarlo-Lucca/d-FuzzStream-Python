@@ -4,7 +4,7 @@ import numpy as np
 
 class DFuzzStreamSummarizer:
 
-    def __init__(self, idxSimilarity, min_fmics=5, max_fmics=100, merge_threshold=0.99999999999999, radius_factor=1.0, m=2.0):
+    def __init__(self, idxSimilarity, min_fmics=5, max_fmics=100, merge_threshold=0.91, radius_factor=1.0, m=2.0):
         self.min_fmics = min_fmics
         self.max_fmics = max_fmics
         self.merge_threshold = merge_threshold
@@ -14,7 +14,7 @@ class DFuzzStreamSummarizer:
         self.VARmemberships = []
         self.idxSimilarity = idxSimilarity
         self.similMatrix = np.zeros((max_fmics, max_fmics, 2))
-        self.maxVal = 0
+
 
     def summarize(self, values, timestamp):
         if len(self.__fmics) < self.min_fmics:
