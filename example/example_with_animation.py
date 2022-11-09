@@ -1,10 +1,15 @@
+import os, sys
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 from d_fuzzstream import DFuzzStreamSummarizer
 
-
-summarizer = DFuzzStreamSummarizer()
+idxSimilarity = 3
+summarizer = DFuzzStreamSummarizer(idxSimilarity)
 
 chunk_size = 100
 figure = plt.figure()
@@ -55,7 +60,7 @@ anim = FuncAnimation(
 
 writer_gif = PillowWriter(fps=60)
 
-anim.save("summary.gif", writer=writer_gif)
+anim.save("summary_"+str(idxSimilarity)+".gif", writer=writer_gif)
 
 plt.close()
 csv.close()
