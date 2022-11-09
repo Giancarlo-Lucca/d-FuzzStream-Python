@@ -6,7 +6,7 @@ sys.path.append(parentdir)
 import pandas as pd
 from d_fuzzstream import DFuzzStreamSummarizer
 
-idxSimilarity = 4
+idxSimilarity = 5
 summarizer = DFuzzStreamSummarizer(idxSimilarity)
 
 summary = {'x': [], 'y': [], 'weight': []}

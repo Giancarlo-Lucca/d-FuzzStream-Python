@@ -4,7 +4,7 @@ import numpy as np
 
 class DFuzzStreamSummarizer:
 
-    def __init__(self, idxSimilarity, min_fmics=5, max_fmics=100, merge_threshold=0.97, radius_factor=1.0, m=2.0):
+    def __init__(self, idxSimilarity, min_fmics=5, max_fmics=100, merge_threshold=0.9, radius_factor=1.0, m=2.0):
         self.min_fmics = min_fmics
         self.max_fmics = max_fmics
         self.merge_threshold = merge_threshold
@@ -45,7 +45,7 @@ class DFuzzStreamSummarizer:
             if len(self.__fmics) >= self.max_fmics:
                 oldest = min(self.__fmics, key=lambda f: f.timestamp)
                 self.__fmics.remove(oldest)
-                self.VARmemberships.pop(oldest)
+
             self.__fmics.append(FMiC(values, timestamp))
             self.VARmemberships.append(1)
             #return
@@ -84,10 +84,6 @@ class DFuzzStreamSummarizer:
                     if similarity >= self.merge_threshold:
                         fmics_to_merge.append([i, j, similarity])
 
-        #else:
-        #    for i in range(0, len(memberships) - 1):
-        #        for j in range(i + 1, len(memberships)):
-                    #S2 sim. measure
                 elif(self.idxSimilarity == 2):
                     self.similMatrix[i, j, 0] += np.minimum(memberships[i], memberships[j])
                     self.similMatrix[i, j, 1] += np.maximum(memberships[i], memberships[j])
@@ -105,7 +101,7 @@ class DFuzzStreamSummarizer:
                 # O = product   #G = probabilistic sum -> x1 + x2 − x1 · x2
                 elif(self.idxSimilarity == 4):
                     overlap = memberships[i] * memberships[j]                      
-                    self.similMatrix[i, j, 0] += self.similMatrix[i, j, 0] + overlap - self.similMatrix[i, j, 0] * overlap 
+                    self.similMatrix[i, j, 0] = self.similMatrix[i, j, 0] + overlap - self.similMatrix[i, j, 0] * overlap 
                     similarity = self.similMatrix[i, j, 0]
                     #print(similarity)
 
@@ -113,7 +109,7 @@ class DFuzzStreamSummarizer:
                 #O = min #G = max
                 elif(self.idxSimilarity == 5):                     
                     min = np.minimum(memberships[i], memberships[j])
-                    self.similMatrix[i, j, 0] += np.maximum(self.similMatrix[i, j, 0], min)
+                    self.similMatrix[i, j, 0] = np.maximum(self.similMatrix[i, j, 0], min)
                     similarity = self.similMatrix[i, j, 0]
 
                     
@@ -152,7 +148,7 @@ class DFuzzStreamSummarizer:
         merged_fmics_idx.sort(reverse=True)
         for idx in merged_fmics_idx:
             self.__fmics.pop(idx)
-        
+            #np.delete(self.similMatrix, idx)
         return self.__fmics + merged_fmics
 
     def __euclidean_distance(self, value_a, value_b):
